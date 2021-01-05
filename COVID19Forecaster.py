@@ -122,8 +122,8 @@ class GaussNewtonAlgo:
             # calculate the residual and jacobian and modify the coefficients
             residual = self.get_residual()
             jacobian = self._calculate_jacobian(self.coefficients, step=10 ** (-6))
-            self.coefficients = self.coefficients - self._calculate_pseudoinverse(jacobian) @ residual
-
+            self.coefficients -= (pinv(jacobian.T @ jacobian) @ jacobian.T) @ residual
+            
             # check if the coefficients are close to accurately portraying the data
             # repeat the process if they aren't
             rmse = np.sqrt(np.sum(residual ** 2))
@@ -134,17 +134,13 @@ class GaussNewtonAlgo:
         
         return self.coefficients
 
-    # predict the value after the one provided by applying the fit function
-    def predict(self, x: np.ndarray):
-        return self.fit_function(self.degree, x, self.coefficients)
+    # get an estimate of the next value by applying the fit function
+    def get_estimate(self) -> np.ndarray:
+        return self.fit_function(self.degree, self.x, self.coefficients)
 
     # return the residual by calling the _calculate_resideual function, using the coefficients
     def get_residual(self) -> np.ndarray:
         return self._calculate_residual(self.coefficients)
-
-    # get an estimate of the next value by applying the fit function
-    def get_estimate(self) -> np.ndarray:
-        return self.fit_function(self.degree, self.x, self.coefficients)
 
     # calculate the residual by applying the fit function and getting the difference
     def _calculate_residual(self, coefficients: np.ndarray) -> np.ndarray:
@@ -167,10 +163,6 @@ class GaussNewtonAlgo:
         jacobian = np.array(jacobian).T
 
         return jacobian
-
-    @staticmethod
-    def _calculate_pseudoinverse(x: np.ndarray) -> np.ndarray:
-        return pinv(x.T @ x) @ x.T
 
 # Polynomial function that can be used to fit the data
 COEFFICIENTS = [1, 1, 1, 1]
